@@ -221,14 +221,15 @@ const thread=[];
 const synth=('speechSynthesis' in window)?window.speechSynthesis:null;let frVoice=null;
 function pickVoice(){try{const v=synth.getVoices();frVoice=v.find(x=>/^fr[-_]FR/i.test(x.lang))||v.find(x=>/^fr/i.test(x.lang))||null}catch(err){}}
 if(synth){pickVoice();try{synth.addEventListener('voiceschanged',pickVoice)}catch(err){}}
+const IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function warn(){$('voicewarn').hidden=false}
 function say(t){
   if(!synth||typeof SpeechSynthesisUtterance==='undefined'){warn();return}
   try{if(synth.speaking||synth.pending)synth.cancel();
-    const u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';if(frVoice)u.voice=frVoice;u.rate=.85;
+    const u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';if(frVoice&&!IOS)u.voice=frVoice;u.rate=.85;
     let started=false;u.onstart=()=>{started=true;$('voicewarn').hidden=true};
     u.onerror=e=>{if(e.error!=='interrupted'&&e.error!=='canceled')warn()};
-    synth.resume();synth.speak(u);
+    if(!IOS)synth.resume();synth.speak(u);
     setTimeout(()=>{if(!started&&!synth.speaking)warn()},3000)}
   catch(err){warn()}}
 const words=ids=>ids.map(i=>P[i].w).join(', ');
