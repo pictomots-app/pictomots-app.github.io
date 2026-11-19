@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pictomots</title>
+<meta name="theme-color" content="#74c8ff">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pictomots">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: joyeux, tendre, lisible — un jouet sérieux pour les familles
+   IDEA: un album d'autocollants : chaque mot est un sticker épais qu'on décolle et qu'on pose
+   PICTURE: deux bulles de dialogue illustrées en tête, puis la messagerie elle-même
+   COLOUR and TYPE: ciel vif semé de confettis, une couleur franche par catégorie, corail pour agir ; Fredoka + Nunito
+   LAYOUT: bandeau titre et illustration, onglets en interrupteur, cartes blanches arrondies ; une colonne sur mobile */
+:root{color-scheme:light dark;
+--bg:light-dark(#74c8ff,#151a3f);--bg2:light-dark(#a6dcff,#232a5c);
+--ink:light-dark(#1b2250,#f1f3ff);--card:light-dark(#ffffff,#222a57);--soft:light-dark(#f2f6ff,#2c3568);
+--acc:light-dark(#f08a3c,#f6a05c);--accd:light-dark(#c4661f,#b86a2c);
+--line:light-dark(rgba(27,34,80,.12),rgba(241,243,255,.14));--shade:light-dark(#d9e3f7,#141938)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip;min-height:100vh;
+background:
+radial-gradient(circle at 12% 18%,#ffd23f 0 5px,transparent 6px),radial-gradient(circle at 82% 9%,#f6a05c 0 4px,transparent 5px),
+radial-gradient(circle at 55% 30%,#ffffff 0 3px,transparent 4px),radial-gradient(circle at 30% 70%,#2ec4b6 0 4px,transparent 5px),
+radial-gradient(circle at 90% 60%,#ffd23f 0 3px,transparent 4px),
+linear-gradient(180deg,var(--bg),var(--bg2));background-size:340px 340px,340px 340px,340px 340px,340px 340px,340px 340px,100% 100%}
+.band{padding:clamp(18px,4vw,40px) max(4vw,12px)}
+.wrap{max-width:980px;margin:0 auto}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,300px);gap:12px 24px;align-items:center;margin-bottom:18px}
+.hero svg{width:100%;height:auto;max-height:190px}
+h1{font:700 clamp(40px,8vw,64px)/1 Fredoka,sans-serif;margin:0;color:var(--acc);text-shadow:0 4px 0 light-dark(#fff,#0b0f2a)}
+.sub{margin:10px 0 0;font-weight:700;max-width:46ch;font-size:17px}
+h2{font:600 22px Fredoka,sans-serif;margin:0 0 12px}
+.tabs{display:inline-flex;gap:4px;padding:5px;margin-bottom:16px;border-radius:999px;background:var(--card);box-shadow:0 5px 0 var(--shade)}
+.tabs button{font:600 17px Fredoka,sans-serif;min-height:46px;padding:0 22px;border-radius:999px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--acc);color:#fff;box-shadow:0 3px 0 var(--accd)}
+.panel{background:var(--card);border-radius:28px;padding:clamp(16px,3vw,30px);box-shadow:0 8px 0 var(--shade);margin-bottom:18px}
+.upbox[hidden],#copyout[hidden],#copyout2[hidden],.panel[hidden],.warn[hidden]{display:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:600 16px Fredoka,sans-serif;min-height:46px;padding:0 20px;border-radius:16px;border:0;background:var(--ink);color:var(--card);cursor:pointer;box-shadow:0 4px 0 color-mix(in srgb,var(--ink) 60%,#000);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 60%,#000)}
+.btn.alt{background:var(--soft);color:var(--ink);box-shadow:0 4px 0 var(--shade)}
+.btn.alt:active{box-shadow:0 1px 0 var(--shade)}
+.btn.hot{background:var(--acc);color:#fff;box-shadow:0 4px 0 var(--accd)}
+.btn.hot:active{box-shadow:0 1px 0 var(--accd)}
+.txt{flex:1 1 240px;font:16px Nunito,sans-serif;min-height:48px;padding:10px 14px;border-radius:16px;border:2px solid var(--line);background:var(--soft);color:var(--ink)}
+.strip{display:flex;flex-wrap:wrap;gap:10px;min-height:104px;padding:12px;border-radius:22px;border:3px dashed color-mix(in srgb,var(--acc) 45%,transparent);background:color-mix(in srgb,var(--acc) 6%,var(--card));margin:14px 0;align-items:center}
+.strip:empty::before{content:attr(data-empty);opacity:.65;font-weight:700}
+.pic{--c:#3a86ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:80px;min-height:84px;padding:8px 4px 6px;border-radius:20px;border:0;
+background:color-mix(in srgb,var(--c) 16%,var(--card));color:var(--ink);cursor:pointer;font:700 12.5px Nunito,sans-serif;line-height:1.15;text-align:center;
+box-shadow:0 4px 0 color-mix(in srgb,var(--c) 50%,var(--card)),inset 0 0 0 2px color-mix(in srgb,var(--c) 30%,transparent)}
+.pic:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--c) 50%,var(--card))}
+.pic .e{font-size:36px;line-height:1.1}
+.pic img{width:46px;height:46px;border-radius:12px;object-fit:cover}
+.cats{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;margin:4px 0 8px}
+.cats button{--c:#3a86ff;flex:none;font:600 15px Fredoka,sans-serif;min-height:42px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;
+background:color-mix(in srgb,var(--c) 16%,var(--card));color:var(--ink);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c) 40%,transparent)}
+.cats button[aria-pressed=true]{background:var(--c);color:#fff;box-shadow:0 3px 0 color-mix(in srgb,var(--c) 65%,#000)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:12px 10px}
+.grid .pic{width:auto}
+.kid .msg{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;padding:20px 6px;border-radius:24px;background:color-mix(in srgb,#ffd23f 18%,var(--card))}
+.big{width:clamp(100px,24vw,140px);min-height:clamp(104px,24vw,146px);border-radius:30px;font-size:15px}
+.big .e{font-size:clamp(56px,13vw,78px)}
+.big img{width:clamp(66px,16vw,96px);height:clamp(66px,16vw,96px);border-radius:20px}
+.kid .reply{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px}
+.kid .reply .pic{width:auto;min-height:98px}
+.kid .reply .pic .e{font-size:48px}
+.kid .reply .pic img{width:58px;height:58px}
+.say{min-height:58px;font-size:19px;padding:0 28px;border-radius:20px}
+.cw{display:flex;flex-direction:column;gap:6px}
+.del{font:700 13px Nunito,sans-serif;min-height:34px;border-radius:12px;border:0;background:var(--soft);color:var(--ink);cursor:pointer}
+.upbox{padding:16px;border-radius:22px;background:color-mix(in srgb,#8ac926 14%,var(--card));margin-bottom:14px}
+.upbox label{display:block;font-weight:800;margin:6px 0}
+.upbox input[type=file]{font:15px Nunito,sans-serif;max-width:100%}
+.upbox .txt{background:var(--card)}
+#copyout{width:100%;margin-top:12px;min-height:70px}
+details.paste{margin-bottom:18px;padding:12px 16px;border-radius:22px;background:var(--soft)}
+details.paste summary{font:600 17px Fredoka,sans-serif;cursor:pointer;min-height:34px;display:flex;align-items:center}
+details.paste textarea{width:100%;min-height:84px;margin:10px 0;background:var(--card);font-size:22px}
+.thread{display:flex;flex-direction:column;gap:14px}
+.bub{position:relative;max-width:min(520px,90%);padding:12px 16px;border-radius:24px;display:flex;flex-direction:column;gap:8px}
+.bub.p{align-self:flex-end;background:color-mix(in srgb,#3a86ff 16%,var(--card));border-bottom-right-radius:6px}
+.bub.k{align-self:flex-start;background:color-mix(in srgb,#ffd23f 30%,var(--card));border-bottom-left-radius:6px}
+.bsay{border:0;background:transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;padding:0}
+.bub .who{display:block;font:600 13px Fredoka,sans-serif;opacity:.75}
+.bub .es{font-size:32px;letter-spacing:4px;line-height:1.3}
+.bub .es img{width:32px;height:32px;border-radius:8px;vertical-align:middle;object-fit:cover}
+.bub .ws{display:block;font-size:14px;opacity:.85}
+.mini{align-self:flex-start;font:700 13px Nunito,sans-serif;min-height:34px;padding:0 14px;border-radius:12px;border:0;background:var(--card);color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--shade)}
+.warn{margin:0 0 16px;padding:12px 16px;border-radius:18px;background:var(--acc);color:#fff;font-weight:700;max-width:70ch}
+.note{font-size:14px;opacity:.75;margin:14px 0 0}
+@media(max-width:600px){.hero{grid-template-columns:1fr}.hero svg{max-height:130px;order:-1}.pic:not(.big){width:72px;min-height:78px}.pic:not(.big) .e{font-size:32px}.grid .pic,.kid .reply .pic{width:auto}.tabs{display:flex}.tabs button{flex:1;padding:0 10px}}
+@media(prefers-reduced-motion:no-preference){.pic{transition:transform .12s,box-shadow .12s}.pic.pop{animation:bob .4s}
+@keyframes bob{30%{transform:scale(1.15) rotate(-4deg)}60%{transform:scale(.95) rotate(3deg)}}
+.hero .fl{animation:fl 4s ease-in-out infinite}.hero .fl2{animation:fl 4s ease-in-out -2s infinite}@keyframes fl{50%{transform:translateY(-6px)}}}
+</style>
+</head>
+<body>
+<main class="band"><div class="wrap">
+<header class="hero">
+<div>
+<h1>Pictomots</h1>
+<p class="sub">Une messagerie en images pour écrire aux enfants qui ne savent pas encore lire. L'enfant touche une image, il l'entend, et il répond en images.</p>
+</div>
+<svg viewBox="0 0 300 190" role="img" aria-label="Deux bulles de dialogue remplies de dessins">
+<g class="fl"><path d="M20 30a24 24 0 0 1 24-24h132a24 24 0 0 1 24 24v58a24 24 0 0 1-24 24H86l-30 26 6-26H44a24 24 0 0 1-24-24z" fill="#fff"/>
+<path d="M20 82v6a24 24 0 0 0 24 24h18l-2 8 10-8h106a24 24 0 0 0 24-24v-6" fill="#d9e3f7" opacity=".6"/>
+<circle cx="66" cy="58" r="18" fill="#ffd23f"/><g stroke="#ffb703" stroke-width="4" stroke-linecap="round"><path d="M66 30v-6M66 92v-6M38 58h-6M100 58h-6"/></g>
+<path d="M112 70l18-18 18 18v20h-36z" fill="#f08a3c"/><rect x="124" y="74" width="12" height="16" rx="3" fill="#fff"/>
+<path d="M170 46c0-8 12-10 14 0 2-10 14-8 14 0 0 10-14 18-14 18s-14-8-14-18z" fill="#e5675f"/></g>
+<g class="fl2"><path d="M150 112a20 20 0 0 1 20-20h96a20 20 0 0 1 20 20v34a20 20 0 0 1-20 20h-12l4 20-26-20h-62a20 20 0 0 1-20-20z" fill="#ffd23f"/>
+<circle cx="190" cy="129" r="13" fill="#fff"/><circle cx="186" cy="126" r="2.5" fill="#1b2250"/><circle cx="195" cy="126" r="2.5" fill="#1b2250"/><path d="M184 133q6 5 12 0" stroke="#1b2250" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<path d="M222 140l8-22 8 22h-6v8h-4v-8z" fill="#2ec4b6"/><rect x="246" y="116" width="22" height="22" rx="6" fill="#3a86ff"/></g>
+</svg>
+</header>
+
+
+<p id="voicewarn" class="warn" hidden role="status">La voix ne se déclenche pas dans cette fenêtre. Ouvre la page dans Chrome ou Safari, monte le volume et vérifie que le téléphone n'est pas en mode silencieux.</p>
+<div class="tabs" role="tablist">
+<button role="tab" id="t-par" aria-selected="true" aria-controls="p-par">Côté adulte</button>
+<button role="tab" id="t-kid" aria-selected="false" aria-controls="p-kid">Côté enfant</button>
+</div>
+
+<section class="panel" id="p-par" role="tabpanel">
+<h2>Écrire un message</h2>
+<div class="row">
+<input class="txt" id="phrase" placeholder="Écris ta phrase, par exemple : après l'école, maman vient en voiture" autocomplete="off">
+<button class="btn alt" id="conv">Mettre en images</button>
+</div>
+<div class="strip" id="draft" data-empty="Touche les images ci-dessous pour composer le message."></div>
+<div class="row">
+<button class="btn hot" id="send">Envoyer</button>
+<button class="btn alt" id="listen">Écouter</button>
+<button class="btn alt" id="undo">Retirer la dernière</button>
+<button class="btn alt" id="clr">Tout effacer</button>
+</div>
+<div class="row" style="margin-top:10px">
+<button class="btn" id="cpe">Copier pour SMS / WhatsApp</button>
+<button class="btn alt" id="cpw">Copier avec les mots</button>
+</div>
+<textarea id="copyout" class="txt" readonly hidden aria-label="Texte à copier"></textarea>
+<div class="cats" id="cats" role="group" aria-label="Catégories" style="margin-top:16px"></div>
+<div id="up" class="upbox" hidden>
+<label for="upf">Ajouter une image : le doudou, la nounou, la maison de mamie…</label>
+<input type="file" id="upf" accept="image/*">
+<label for="upw">Mot lu à voix haute</label>
+<div class="row"><input class="txt" id="upw" placeholder="Par exemple : la nounou" autocomplete="off"><button class="btn" id="upok">Ajouter</button></div>
+<p class="note" id="upmsg">Les images ajoutées restent sur ce téléphone.</p>
+</div>
+<div class="grid" id="grid"></div>
+<p class="note">Touche une image du message pour la retirer. La phrase écrite ne passe en images que pour les mots connus du dictionnaire. Dans un SMS, une image personnelle apparaît sous forme de mot entre crochets.</p>
+</section>
+
+<section class="panel kid" id="p-kid" role="tabpanel" hidden>
+<details class="paste"><summary>Message reçu par SMS ou WhatsApp</summary>
+<textarea id="kin" class="txt" placeholder="Colle ici le message en émojis" aria-label="Message reçu"></textarea>
+<button class="btn" id="kshow">Afficher en grand</button>
+<p class="note" id="kinmsg"></p>
+</details>
+<h2>Ton message</h2>
+<div class="msg" id="kmsg"></div>
+<div class="row" style="justify-content:center"><button class="btn hot say" id="ksay">Écouter tout</button></div>
+<h2 style="margin-top:22px">Répondre</h2>
+<div class="strip" id="kdraft" data-empty="Touche une image pour répondre."></div>
+<div class="row"><button class="btn hot say" id="ksend">Envoyer</button><button class="btn alt say" id="kclr">Effacer</button><button class="btn alt say" id="kcp">Copier la réponse</button></div>
+<div class="cats" id="kcats" role="group" aria-label="Catégories" style="margin-top:14px"></div>
+<div class="reply" id="kpal"></div>
+</section>
+
+<textarea id="copyout2" class="txt" readonly hidden aria-label="Texte à copier" style="width:100%;margin:0 0 16px;min-height:70px"></textarea>
+<section class="panel" id="conv-box" hidden>
+<h2>Conversation</h2>
+<div class="thread" id="thread"></div>
+<p class="note">Touche une bulle pour l'entendre.</p>
+</section>
+<p class="note" style="text-align:center"><a href="confidentialite.html" style="color:inherit">Confidentialité</a></p>
+</div></main>
+
+<script>
+{
+const D=[
+['Politesse','🌞','bonjour','bonjour salut coucou'],['Politesse','👋','au revoir','revoir ciao'],['Politesse','🙏','merci','merci'],['Politesse','🤲','s\'il te plaît','plait'],['Politesse','🥺','pardon','pardon desol excus'],['Politesse','👏','bravo','bravo felicit super'],['Politesse','😘','des bisous','bisou'],['Politesse','💤','bonne nuit','nuit'],['Politesse','😋','bon appétit','appetit'],
+['Personnes','👩','maman','mam mere'],['Personnes','👨','papa','pap pere'],['Personnes','👵','mamie','mami'],['Personnes','👴','papi','papy'],
+['Personnes','🧒','toi','toi tu te'],['Personnes','👫','les copains','copain copine amis'],['Personnes','🧑‍🏫','la maîtresse','maitre institut'],['Personnes','👶','le bébé','bebe'],['Personnes','👦','le frère','frere'],['Personnes','👧','la sœur','soeur'],['Personnes','🧑‍🍼','la nounou','nounou nourrice'],['Personnes','🐶','le chien','chien'],['Personnes','🐱','le chat','chat'],
+['Actions','🍽️','manger','mang repas diner dejeun faim'],['Actions','🥤','boire','boir boi soif'],['Actions','🛁','le bain','bain douche lav'],['Actions','🪥','les dents','dent bross'],['Actions','😴','dormir','dorm dodo sieste couch fatigu'],
+['Actions','👕','s\'habiller','habill'],['Actions','🚗','la voiture','voitur'],['Actions','🚶','marcher','march pied promen'],['Actions','🎮','jouer','jou jeu'],['Actions','📖','une histoire','histoir livre conte'],
+['Actions','🎨','dessiner','dessin peindr colori'],['Actions','🤗','un câlin','calin'],['Actions','📞','téléphoner','telephon appel'],['Actions','🏃','venir','vien venir cherch arriv'],['Actions','📺','la télé','tele dessin-anime'],['Actions','🚲','le vélo','velo'],['Actions','⚽','le ballon','ballon foot'],['Actions','🎵','la musique','musique chant'],['Actions','💃','danser','dans'],['Actions','🧩','le puzzle','puzzle'],['Actions','🏊','la piscine','piscine nag'],
+['Besoins','🚽','les toilettes','toilett pipi caca pot'],['Besoins','🤕','j\'ai mal','mal bobo bless'],['Besoins','🤒','malade','malade fievre'],['Besoins','🥶','froid','froid'],['Besoins','🥵','chaud','chaud'],['Besoins','🙋','aide-moi','aide aider'],['Besoins','🛑','stop','stop arret'],['Besoins','🔁','encore','encore'],['Besoins','✋','fini','fini termin'],
+
+['Lieux','🏠','la maison','maison rentr'],['Lieux','🏫','l\'école','ecole classe'],['Lieux','🌳','le parc','parc jardin'],['Lieux','🛒','le magasin','magasin cours supermarch'],['Lieux','🩺','le docteur','docteur medecin'],['Lieux','🏖️','la plage','plage mer'],
+['Moments','🌅','le matin','matin'],['Moments','🌙','le soir','soir nuit'],['Moments','➡️','après','apres ensuite puis'],['Moments','⏳','attendre','attend patien'],['Moments','📅','demain','demain'],['Moments','🔜','bientôt','bientot'],
+['Émotions','❤️','je t\'aime','aime amour'],['Émotions','😊','content','content heureu joie'],['Émotions','😢','triste','trist pleur'],['Émotions','😠','fâché','fache colere'],['Émotions','😨','peur','peur'],
+['Émotions','👍','oui','oui accord'],['Émotions','👎','non','non'],['Émotions','❓','une question','question pourquoi'],['Émotions','🥳','la fête','fete anniversair'],['Émotions','😂','rigolo','rigol drole rire'],['Émotions','😲','surpris','surpris'],['Émotions','😐','bof','bof'],
+['Choses','🍪','le goûter','gouter biscuit'],['Choses','🍎','un fruit','fruit pomme'],['Choses','💧','de l\'eau','eau'],['Choses','🎁','un cadeau','cadeau'],['Choses','🧥','le manteau','manteau veste'],['Choses','☂️','le parapluie','parapluie pluie'],['Choses','🧸','le doudou','doudou'],['Choses','🍦','une glace','glace'],['Choses','🍬','un bonbon','bonbon'],['Choses','🥛','du lait','lait'],['Choses','🍞','du pain','pain tartin'],['Choses','🎒','le cartable','cartable sac'],
+];
+const MINE='Mes images',LS='pictomots-images';
+const norm=s=>s.toLowerCase().replace(/œ/g,'oe').replace(/æ/g,'ae').normalize('NFD').replace(/[̀-ͯ]/g,'');
+const STOP=new Set(['le','la','les','l','un','une','de','des','du','s','je','t','d','au','il','te','bon','bonne','j','ai','moi']);
+const keys=(w,k)=>(norm(w)+' '+norm(k||'')).split(/[\s'-]+/).filter(x=>x&&!STOP.has(x));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const P=D.map(([c,e,w,k],i)=>({i,c,e,w,k:keys(w,k)}));
+function saveMine(){try{localStorage.setItem(LS,JSON.stringify(P.filter(p=>p.img&&!p.del).map(p=>({w:p.w,img:p.img}))))}catch(err){return false}return true}
+function addMine(w,img){const p={i:P.length,c:MINE,e:'',w,k:keys(w),img};P.push(p);return p}
+try{(JSON.parse(localStorage.getItem(LS)||'[]')).forEach(x=>addMine(x.w,x.img))}catch(err){}
+const CATCOL={'Politesse':'#f4a100','Personnes':'#c77dba','Actions':'#3a86ff','Lieux':'#14a89c','Moments':'#9b5de5','Émotions':'#e5675f','Choses':'#ff8c42','Mes images':'#5fa30f','Besoins':'#a47148','Favoris':'#f08a3c'};
+const CATS=[...new Set(D.map(d=>d[0]))].concat(MINE);
+const KID=['👍','👎','🌞','👋','🙏','😘','❤️','😊','😢','🤗','🍽️','🥤','🚽','🤕','😴','🎮','🏠','🏃','🔁','✋','❓'].map(e=>P.find(p=>p.e===e));
+const $=id=>document.getElementById(id);
+const find=e=>P.find(p=>p.e===e).i;
+let draft=[],kdraft=[],cat=CATS[0],kcat='Favoris';
+const thread=[];
+
+const synth=('speechSynthesis' in window)?window.speechSynthesis:null;let frVoice=null;
+function pickVoice(){try{const v=synth.getVoices();frVoice=v.find(x=>/^fr[-_]FR/i.test(x.lang))||v.find(x=>/^fr/i.test(x.lang))||null}catch(err){}}
+if(synth){pickVoice();try{synth.addEventListener('voiceschanged',pickVoice)}catch(err){}}
+function warn(){$('voicewarn').hidden=false}
+function say(t){
+  if(!synth||typeof SpeechSynthesisUtterance==='undefined'){warn();return}
+  try{if(synth.speaking||synth.pending)synth.cancel();
+    const u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';if(frVoice)u.voice=frVoice;u.rate=.85;
+    let started=false;u.onstart=()=>{started=true;$('voicewarn').hidden=true};
+    u.onerror=e=>{if(e.error!=='interrupted'&&e.error!=='canceled')warn()};
+    synth.resume();synth.speak(u);
+    setTimeout(()=>{if(!started&&!synth.speaking)warn()},3000)}
+  catch(err){warn()}}
+const words=ids=>ids.map(i=>P[i].w).join(', ');
+const vis=p=>p.img?'<img src="'+p.img+'" alt="">':'<span class="e" aria-hidden="true">'+p.e+'</span>';
+const pic=(p,cls,act,n)=>'<button class="pic '+(cls||'')+'" style="--c:'+(CATCOL[p.c]||'#3a86ff')+'" data-i="'+p.i+'" data-a="'+act+'"'+(n!=null?' data-n="'+n+'"':'')+' aria-label="'+esc(p.w)+'">'+vis(p)+esc(p.w)+'</button>';
+function pop(el){el.classList.add('pop');setTimeout(()=>el.classList.remove('pop'),180)}
+
+/* texte à copier : émojis, images perso entre crochets */
+function asText(ids,withWords){
+  const em=ids.map(i=>P[i].img?'['+P[i].w+']':P[i].e).join(' ');
+  if(!withWords)return em;const w=words(ids);return em+'\n'+w.charAt(0).toUpperCase()+w.slice(1)+'.'}
+async function copy(t,btn,box){const old=btn.textContent;
+  try{await navigator.clipboard.writeText(t);btn.textContent='Copié, colle-le dans ta messagerie';box.hidden=true}
+  catch(err){box.hidden=false;box.value=t;box.focus();box.select();btn.textContent='Sélectionne le texte ci-dessous et copie-le'}
+  setTimeout(()=>btn.textContent=old,2200)}
+
+/* lecture d'un message collé */
+function parse(text){const s=text.replace(/️/g,'');const out=[];
+  const list=P.filter(p=>!p.img&&!p.del).map(p=>[p.e.replace(/️/g,''),p.i]).sort((a,b)=>b[0].length-a[0].length);
+  let i=0;while(i<s.length){
+    if(s[i]==='['){const j=s.indexOf(']',i);if(j>i){const w=norm(s.slice(i+1,j).trim());const p=P.find(p=>p.img&&!p.del&&norm(p.w)===w);if(p)out.push(p.i);i=j+1;continue}}
+    const m=list.find(([e])=>s.startsWith(e,i));if(m){out.push(m[1]);i+=m[0].length}else i++}
+  return out}
+
+function toPictos(text){const out=[];
+  for(const t of norm(text).split(/[^a-z]+/).filter(Boolean)){
+    const p=P.find(p=>!p.del&&p.k.some(k=>t===k||(k.length>=4&&t.startsWith(k))));
+    if(p&&!out.includes(p.i))out.push(p.i)}
+  return out}
+
+function renderPar(){
+  $('cats').innerHTML=CATS.map(c=>'<button data-c="'+c+'" style="--c:'+CATCOL[c]+'" aria-pressed="'+(c===cat)+'">'+c+'</button>').join('');
+  $('up').hidden=cat!==MINE;
+  const items=P.filter(p=>p.c===cat&&!p.del);
+  $('grid').innerHTML=cat===MINE
+    ?(items.length?items.map(p=>'<div class="cw">'+pic(p,'','add')+'<button class="del" data-del="'+p.i+'">Retirer</button></div>').join(''):'<p class="note">Aucune image pour l\'instant.</p>')
+    :items.map(p=>pic(p,'','add')).join('');
+  $('draft').innerHTML=draft.map((i,n)=>pic(P[i],'','rm',n)).join('');
+}
+function renderKid(){
+  const last=[...thread].reverse().find(m=>m.f==='p');
+  $('kmsg').innerHTML=last?last.x.map(i=>pic(P[i],'big','say')).join(''):'<p class="note">Pas encore de message. L\'adulte l\'écrit côté adulte, ou le colle ci-dessus s\'il est arrivé par SMS.</p>';
+  $('kdraft').innerHTML=kdraft.map((i,n)=>pic(P[i],'','krm',n)).join('');
+  $('kcats').innerHTML=['Favoris'].concat(CATS).map(c=>'<button data-kc="'+c+'" style="--c:'+CATCOL[c]+'" aria-pressed="'+(c===kcat)+'">'+c+'</button>').join('');
+  const items=kcat==='Favoris'?KID.concat(P.filter(p=>p.img&&!p.del)):P.filter(p=>p.c===kcat&&!p.del);
+  $('kpal').innerHTML=items.length?items.map(p=>pic(p,'','kadd')).join(''):'<p class="note">Pas encore d\'image ici.</p>';
+}
+function renderThread(){
+  $('conv-box').hidden=!thread.length;
+  $('thread').innerHTML=thread.map((m,n)=>'<div class="bub '+m.f+'"><button class="bsay" data-n="'+n+'"><span class="who">'+(m.f==='p'?'Adulte':'Enfant')+'</span><span class="es">'+m.x.map(i=>P[i].img?'<img src="'+P[i].img+'" alt="'+esc(P[i].w)+'">':P[i].e).join(' ')+'</span><span class="ws">'+esc(words(m.x))+'</span></button><button class="mini" data-cp="'+n+'">Copier</button></div>').join('');
+}
+function all(){renderPar();renderKid();renderThread()}
+
+document.addEventListener('click',ev=>{
+  const c=ev.target.closest('[data-c]');if(c){cat=c.dataset.c;renderPar();return}
+  const kc=ev.target.closest('[data-kc]');if(kc){kcat=kc.dataset.kc;renderKid();return}
+  const d=ev.target.closest('[data-del]');if(d){const p=P[+d.dataset.del];p.del=true;draft=draft.filter(i=>i!==p.i);kdraft=kdraft.filter(i=>i!==p.i);saveMine();all();return}
+  const cp=ev.target.closest('[data-cp]');if(cp){copy(asText(thread[+cp.dataset.cp].x,false),cp,$('copyout2'));return}
+  const b=ev.target.closest('.bsay');if(b){say(words(thread[+b.dataset.n].x));return}
+  const el=ev.target.closest('.pic');if(!el)return;
+  const i=+el.dataset.i,a=el.dataset.a,n=+el.dataset.n;
+  if(a==='add'){draft.push(i);say(P[i].w);renderPar();return}
+  if(a==='rm'){draft.splice(n,1);renderPar();return}
+  if(a==='say'){say(P[i].w);pop(el);return}
+  if(a==='kadd'){if(kdraft.length<6)kdraft.push(i);say(P[i].w);renderKid();return}
+  if(a==='krm'){kdraft.splice(n,1);renderKid();return}
+});
+$('conv').addEventListener('click',()=>{const r=toPictos($('phrase').value);if(r.length){draft=r;renderPar()}});
+$('phrase').addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();$('conv').click()}});
+$('send').addEventListener('click',()=>{if(!draft.length)return;thread.push({f:'p',x:draft.slice()});draft=[];$('phrase').value='';all()});
+$('listen').addEventListener('click',()=>{if(draft.length)say(words(draft))});
+$('undo').addEventListener('click',()=>{draft.pop();renderPar()});
+$('clr').addEventListener('click',()=>{draft=[];renderPar()});
+$('cpe').addEventListener('click',ev=>{if(draft.length)copy(asText(draft,false),ev.currentTarget,$('copyout'))});
+$('cpw').addEventListener('click',ev=>{if(draft.length)copy(asText(draft,true),ev.currentTarget,$('copyout'))});
+
+/* ajout d'images */
+function shrink(file){return new Promise((res,rej)=>{const r=new FileReader();
+  r.onload=()=>{const im=new Image();im.onload=()=>{const s=180,cv=document.createElement('canvas');cv.width=cv.height=s;const x=cv.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,s,s);const m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,s,s);res(cv.toDataURL('image/jpeg',.82))};
+    im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
+$('upok').addEventListener('click',async()=>{const f=$('upf').files[0],w=$('upw').value.trim(),msg=$('upmsg');
+  if(!f){msg.textContent='Choisis d\'abord une image.';return}
+  if(!w){msg.textContent='Donne un mot à l\'image, il sera lu à voix haute.';return}
+  try{const img=await shrink(f);addMine(w,img);
+    msg.textContent=saveMine()?'Image ajoutée. Elle reste sur ce téléphone.':'Image ajoutée pour cette session. Ce navigateur ne permet pas de la garder.';
+    $('upf').value='';$('upw').value='';all()}
+  catch(err){msg.textContent='Cette image n\'a pas pu être lue. Essaie une photo en JPG ou PNG.'}});
+
+/* côté enfant */
+$('ksay').addEventListener('click',()=>{const last=[...thread].reverse().find(m=>m.f==='p');if(last)say(words(last.x))});
+$('ksend').addEventListener('click',()=>{if(!kdraft.length)return;thread.push({f:'k',x:kdraft.slice()});kdraft=[];all()});
+$('kclr').addEventListener('click',()=>{kdraft=[];renderKid()});
+$('kcp').addEventListener('click',ev=>{if(kdraft.length)copy(asText(kdraft,false),ev.currentTarget,$('copyout2'))});
+$('kshow').addEventListener('click',()=>{const r=parse($('kin').value);
+  if(!r.length){$('kinmsg').textContent='Aucune image connue dans ce message.';return}
+  $('kinmsg').textContent='';thread.push({f:'p',x:r});$('kin').value='';all();say(words(r))});
+
+const tabs=[['t-par','p-par'],['t-kid','p-kid']];
+tabs.forEach(([t,p])=>$(t).addEventListener('click',()=>{tabs.forEach(([t2,p2])=>{$(t2).setAttribute('aria-selected',t2===t);$(p2).hidden=p2!==p})}));
+all();
+}
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+</script>
+</body>
+</html>
